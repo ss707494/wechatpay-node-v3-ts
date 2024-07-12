@@ -1,0 +1,13 @@
+{
+  "name": "@ximagine/wechatpay-node-v3-axios",
+  "version": "1.0.0",
+  "exports": "./index.ts",
+  "publish": {
+    "include": [
+      "LICENSE",
+      "README.md",
+      "lib/**/*.ts",
+      "index.ts"
+    ]
+  }
+}

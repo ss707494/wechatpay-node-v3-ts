@@ -1,4 +1,4 @@
-import request from 'superagent';
+import axios, { AxiosRequestConfig } from 'axios';
 import { Output } from './interface-v2';
 
 export class Base {
@@ -20,11 +20,12 @@ export class Base {
     if (str) str = '?' + str;
     return str || '';
   }
+
   /**
    * 获取请求头
    * @param authorization
    */
-  protected getHeaders(authorization: string, headers = {}) {
+  protected getHeaders(authorization: string, headers = {}): Record<string, string> {
     return {
       ...headers,
       Accept: 'application/json',
@@ -33,6 +34,7 @@ export class Base {
       'Accept-Encoding': 'gzip',
     };
   }
+
   /**
    * post 请求
    * @param url  请求接口
@@ -41,29 +43,30 @@ export class Base {
    */
   protected async postRequest(url: string, params: Record<string, any>, authorization: string): Promise<Record<string, any>> {
     try {
-      const result = await request
-        .post(url)
-        .send(params)
-        .set({
+      const config: AxiosRequestConfig = {
+        headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
           'User-Agent': this.userAgent,
           Authorization: authorization,
           'Accept-Encoding': 'gzip',
-        });
+        },
+      };
+      const result = await axios.post(url, params, config);
       return {
         status: result.status,
-        ...result.body,
+        ...result.data,
       };
     } catch (error) {
       const err = JSON.parse(JSON.stringify(error));
       return {
-        status: err.status,
+        status: err.response.status,
         errRaw: err,
-        ...(err?.response?.text && JSON.parse(err?.response?.text)),
+        ...(err.response?.data && JSON.parse(err.response.data)),
       };
     }
   }
+
   /**
    * post 请求 V2
    * @param url  请求接口
@@ -72,30 +75,31 @@ export class Base {
    */
   protected async postRequestV2(url: string, params: Record<string, any>, authorization: string, headers = {}): Promise<Output> {
     try {
-      const result = await request
-        .post(url)
-        .send(params)
-        .set({
+      const config: AxiosRequestConfig = {
+        headers: {
           ...headers,
           Accept: 'application/json',
           'Content-Type': 'application/json',
           'User-Agent': this.userAgent,
           Authorization: authorization,
           'Accept-Encoding': 'gzip',
-        });
+        },
+      };
+      const result = await axios.post(url, params, config);
       return {
         status: result.status,
-        data: result.body,
+        data: result.data,
       };
     } catch (error) {
       const err = JSON.parse(JSON.stringify(error));
       return {
-        status: err.status as number,
+        status: err.response.status as number,
         errRaw: err,
-        error: err?.response?.text,
+        error: err.response?.data,
       };
     }
   }
+
   /**
    * get 请求
    * @param url  请求接口
@@ -104,52 +108,54 @@ export class Base {
    */
   protected async getRequest(url: string, authorization: string, query: Record<string, any> = {}): Promise<Record<string, any>> {
     try {
-      const result = await request
-        .get(url)
-        .query(query)
-        .set({
+      const config: AxiosRequestConfig = {
+        headers: {
           Accept: 'application/json',
           'User-Agent': this.userAgent,
           Authorization: authorization,
           'Accept-Encoding': 'gzip',
-        });
+        },
+        params: query,
+      };
+      const result = await axios.get(url, config);
 
       let data = {};
-      switch (result.type) {
+      switch (result.headers['content-type']) {
         case 'application/json':
           data = {
             status: result.status,
-            ...result.body,
+            ...result.data,
           };
           break;
         case 'text/plain':
           data = {
             status: result.status,
-            data: result.text,
+            data: result.data,
           };
           break;
         case 'application/x-gzip':
           data = {
             status: result.status,
-            data: result.body,
+            data: result.data,
           };
           break;
         default:
           data = {
             status: result.status,
-            ...result.body,
+            ...result.data,
           };
       }
       return data;
     } catch (error) {
       const err = JSON.parse(JSON.stringify(error));
       return {
-        status: err.status,
+        status: err.response.status,
         errRaw: err,
-        ...(err?.response?.text && JSON.parse(err?.response?.text)),
+        ...(err.response?.data && JSON.parse(err.response.data)),
       };
     }
   }
+
   /**
    * get 请求 v2
    * @param url  请求接口
@@ -158,26 +164,27 @@ export class Base {
    */
   protected async getRequestV2(url: string, authorization: string, query: Record<string, any> = {}): Promise<Output> {
     try {
-      const result = await request
-        .get(url)
-        .query(query)
-        .set({
+      const config: AxiosRequestConfig = {
+        headers: {
           Accept: 'application/json',
           'User-Agent': this.userAgent,
           Authorization: authorization,
           'Accept-Encoding': 'gzip',
-        });
+        },
+        params: query,
+      };
+      const result = await axios.get(url, config);
 
       let data: any = {};
-      if (result.type === 'text/plain') {
+      if (result.headers['content-type'] === 'text/plain') {
         data = {
           status: result.status,
-          data: result.text,
+          data: result.data,
         };
       } else {
         data = {
           status: result.status,
-          data: result.body,
+          data: result.data,
         };
       }
 
@@ -185,9 +192,9 @@ export class Base {
     } catch (error) {
       const err = JSON.parse(JSON.stringify(error));
       return {
-        status: err.status,
+        status: err.response.status,
         errRaw: err,
-        error: err?.response?.text,
+        error: err.response?.data,
       };
     }
   }

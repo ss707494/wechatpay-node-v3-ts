@@ -1,42 +1,45 @@
+import axios, { AxiosRequestConfig } from 'axios';
 import { Output } from './interface-v2';
 import { IPayRequest } from './pay-request.interface';
-import request from 'superagent';
 
 export class PayRequest implements IPayRequest {
   async post(url: string, params: Record<string, any>, headers: Record<string, any>): Promise<Output> {
     try {
-      const result = await request
-        .post(url)
-        .send(params)
-        .set(headers);
+      const config: AxiosRequestConfig = {
+        headers: headers,
+      };
+      const result = await axios.post(url, params, config);
       return {
         status: result.status,
-        data: result.body,
+        data: result.data,
       };
     } catch (error) {
       const err = JSON.parse(JSON.stringify(error));
       return {
-        status: err.status as number,
+        status: err.response.status,
         errRaw: err,
-        error: err?.response?.text,
+        error: err.response?.data,
       };
     }
   }
 
   async get(url: string, headers: Record<string, any>): Promise<Output> {
     try {
-      const result = await request.get(url).set(headers);
+      const config: AxiosRequestConfig = {
+        headers: headers,
+      };
+      const result = await axios.get(url, config);
 
       let data: any = {};
-      if (result.type === 'text/plain') {
+      if (result.headers['content-type'] === 'text/plain') {
         data = {
           status: result.status,
-          data: result.text,
+          data: result.data,
         };
       } else {
         data = {
           status: result.status,
-          data: result.body,
+          data: result.data,
         };
       }
 
@@ -44,9 +47,9 @@ export class PayRequest implements IPayRequest {
     } catch (error) {
       const err = JSON.parse(JSON.stringify(error));
       return {
-        status: err.status,
+        status: err.response.status,
         errRaw: err,
-        error: err?.response?.text,
+        error: err.response?.data,
       };
     }
   }

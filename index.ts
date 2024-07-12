@@ -18,12 +18,12 @@ import {
   ICertificates,
 } from './lib/interface';
 import { IcombineH5, IcombineNative, IcombineApp, IcombineJsapi, IcloseSubOrders } from './lib/combine_interface';
-import { BatchesTransfer, FindRefunds, ProfitSharing, Refunds } from './lib/interface-v2';
+import { BatchesTransfer, FindRefunds, Output, ProfitSharing, Refunds } from './lib/interface-v2';
 import { Base } from './lib/base';
 import { IPayRequest } from './lib/pay-request.interface';
 import { PayRequest } from './lib/pay-request';
 
-class Pay extends Base {
+export class Pay extends Base {
   protected appid: string; //  直连商户申请的公众号或移动应用appid。
   protected mchid: string; // 商户号
   protected serial_no = ''; // 证书序列号
@@ -191,7 +191,7 @@ class Pay extends Base {
     serial: string;
     signature: string;
     apiSecret?: string;
-  }) {
+  }): Promise<boolean> {
     const { timestamp, nonce, body, serial, signature, apiSecret } = params;
 
     let publicKey = Pay.certificates[serial];
@@ -218,7 +218,7 @@ class Pay extends Base {
    * @param str 敏感信息字段（如用户的住址、银行卡号、手机号码等）
    * @returns
    */
-  public publicEncrypt(str: string, wxPublicKey: Buffer, padding = crypto.constants.RSA_PKCS1_OAEP_PADDING) {
+  public publicEncrypt(str: string, wxPublicKey: Buffer, padding = crypto.constants.RSA_PKCS1_OAEP_PADDING): string {
     if (![crypto.constants.RSA_PKCS1_PADDING, crypto.constants.RSA_PKCS1_OAEP_PADDING].includes(padding)) {
       throw new Error(`Doesn't supported the padding mode(${padding}), here's only support RSA_PKCS1_OAEP_PADDING or RSA_PKCS1_PADDING.`);
     }
@@ -230,7 +230,7 @@ class Pay extends Base {
    * @param str 敏感信息字段（如用户的住址、银行卡号、手机号码等）
    * @returns
    */
-  public privateDecrypt(str: string, padding = crypto.constants.RSA_PKCS1_OAEP_PADDING) {
+  public privateDecrypt(str: string, padding = crypto.constants.RSA_PKCS1_OAEP_PADDING): string {
     if (![crypto.constants.RSA_PKCS1_PADDING, crypto.constants.RSA_PKCS1_OAEP_PADDING].includes(padding)) {
       throw new Error(`Doesn't supported the padding mode(${padding}), here's only support RSA_PKCS1_OAEP_PADDING or RSA_PKCS1_PADDING.`);
     }
@@ -257,7 +257,7 @@ class Pay extends Base {
   // 时间戳
   // 随机字符串
   // 预支付交易会话ID
-  protected sign(str: string) {
+  protected sign(str: string): string {
     return this.sha256WithRsa(str);
   }
   // 获取序列号
@@ -338,7 +338,7 @@ class Pay extends Base {
   /**
    * 参数初始化
    */
-  protected init(method: string, url: string, params?: Record<string, any>) {
+  protected init(method: string, url: string, params?: Record<string, any>): string {
     const nonce_str = Math.random()
         .toString(36)
         .substr(2, 15),
@@ -353,7 +353,7 @@ class Pay extends Base {
    * h5支付
    * @param params 请求参数 object 参数介绍 请看文档https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_3_1.shtml
    */
-  public async transactions_h5(params: Ih5) {
+  public async transactions_h5(params: Ih5): Promise<Output> {
     // 请求参数
     const _params = {
       appid: this.appid,
@@ -370,7 +370,7 @@ class Pay extends Base {
    * 合单h5支付
    * @param params 请求参数 object 参数介绍 请看文档https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter5_1_2.shtml
    */
-  public async combine_transactions_h5(params: IcombineH5) {
+  public async combine_transactions_h5(params: IcombineH5): Promise<Output> {
     // 请求参数
     const _params = {
       combine_appid: this.appid,
@@ -389,7 +389,7 @@ class Pay extends Base {
    * native支付
    * @param params 请求参数 object 参数介绍 请看文档https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_4_1.shtml
    */
-  public async transactions_native(params: Inative) {
+  public async transactions_native(params: Inative): Promise<Output> {
     // 请求参数
     const _params = {
       appid: this.appid,
@@ -406,7 +406,7 @@ class Pay extends Base {
    * 合单native支付
    * @param params 请求参数 object 参数介绍 请看文档https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter5_1_5.shtml
    */
-  public async combine_transactions_native(params: IcombineNative) {
+  public async combine_transactions_native(params: IcombineNative): Promise<Output> {
     // 请求参数
     const _params = {
       combine_appid: this.appid,
@@ -423,7 +423,7 @@ class Pay extends Base {
    * app支付
    * @param params 请求参数 object 参数介绍 请看文档https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_2_1.shtml
    */
-  public async transactions_app(params: Iapp) {
+  public async transactions_app(params: Iapp): Promise<Output> {
     // 请求参数
     const _params = {
       appid: this.appid,
@@ -457,7 +457,7 @@ class Pay extends Base {
    * 合单app支付
    * @param params 请求参数 object 参数介绍 请看文档https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter5_1_1.shtml
    */
-  public async combine_transactions_app(params: IcombineApp) {
+  public async combine_transactions_app(params: IcombineApp): Promise<Output> {
     // 请求参数
     const _params = {
       combine_appid: this.appid,
@@ -491,7 +491,7 @@ class Pay extends Base {
    * JSAPI支付 或者 小程序支付
    * @param params 请求参数 object 参数介绍 请看文档https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_1.shtml
    */
-  public async transactions_jsapi(params: Ijsapi) {
+  public async transactions_jsapi(params: Ijsapi): Promise<Output> {
     // 请求参数
     const _params = {
       appid: this.appid,
@@ -524,7 +524,7 @@ class Pay extends Base {
    * 合单JSAPI支付 或者 小程序支付
    * @param params 请求参数 object 参数介绍 请看文档https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter5_1_3.shtml
    */
-  public async combine_transactions_jsapi(params: IcombineJsapi) {
+  public async combine_transactions_jsapi(params: IcombineJsapi): Promise<Output> {
     // 请求参数
     const _params = {
       combine_appid: this.appid,
@@ -557,7 +557,7 @@ class Pay extends Base {
    * 查询订单
    * @param params 请求参数 object 参数介绍 请看文档https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_3_2.shtml
    */
-  public async query(params: Iquery1 | Iquery2) {
+  public async query(params: Iquery1 | Iquery2): Promise<Output> {
     let url = '';
     if (params.transaction_id) {
       url = `https://api.mch.weixin.qq.com/v3/pay/transactions/id/${params.transaction_id}?mchid=${this.mchid}`;
@@ -575,7 +575,7 @@ class Pay extends Base {
    * 合单查询订单
    * @param params 请求参数 object 参数介绍 请看文档https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter5_1_11.shtml
    */
-  public async combine_query(combine_out_trade_no: string) {
+  public async combine_query(combine_out_trade_no: string): Promise<Output> {
     if (!combine_out_trade_no) throw new Error('缺少combine_out_trade_no');
     const url = `https://api.mch.weixin.qq.com/v3/combine-transactions/out-trade-no/${combine_out_trade_no}`;
 
@@ -587,7 +587,7 @@ class Pay extends Base {
    * 关闭订单
    * @param out_trade_no 请求参数 商户订单号 参数介绍 请看文档https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_3_3.shtml
    */
-  public async close(out_trade_no: string) {
+  public async close(out_trade_no: string): Promise<Output> {
     if (!out_trade_no) throw new Error('缺少out_trade_no');
 
     // 请求参数
@@ -604,7 +604,7 @@ class Pay extends Base {
    * @param combine_out_trade_no 请求参数 总订单号 参数介绍 请看文档https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter5_1_12.shtml
    * @param sub_orders array 子单信息
    */
-  public async combine_close(combine_out_trade_no: string, sub_orders: IcloseSubOrders[]) {
+  public async combine_close(combine_out_trade_no: string, sub_orders: IcloseSubOrders[]): Promise<Output> {
     if (!combine_out_trade_no) throw new Error('缺少out_trade_no');
 
     // 请求参数
@@ -621,7 +621,7 @@ class Pay extends Base {
    * 申请交易账单
    * @param params 请求参数 object 参数介绍 请看文档https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_6.shtml
    */
-  public async tradebill(params: Itradebill) {
+  public async tradebill(params: Itradebill): Promise<Output> {
     let url = 'https://api.mch.weixin.qq.com/v3/bill/tradebill';
     const _params: any = {
       ...params,
@@ -644,7 +644,7 @@ class Pay extends Base {
    * 申请资金账单
    * @param params 请求参数 object 参数介绍 请看文档https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_7.shtml
    */
-  public async fundflowbill(params: Ifundflowbill) {
+  public async fundflowbill(params: Ifundflowbill): Promise<Output> {
     let url = 'https://api.mch.weixin.qq.com/v3/bill/fundflowbill';
     const _params: any = {
       ...params,
@@ -667,7 +667,7 @@ class Pay extends Base {
    * 下载账单
    * @param download_url 请求参数 路径 参数介绍 请看文档https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_8.shtml
    */
-  public async downloadBill(download_url: string) {
+  public async downloadBill(download_url: string): Promise<Output> {
     const authorization = this.init('GET', download_url);
     const headers = this.getHeaders(authorization);
     return await this.httpService.get(download_url, headers);
@@ -925,5 +925,3 @@ class Pay extends Base {
   }
   //#endregion 分账
 }
-
-export = Pay;

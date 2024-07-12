@@ -5,3 +5,5 @@ test
 yarn.lock
 test.ts
 test/*
+
+.idea

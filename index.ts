@@ -1,7 +1,5 @@
 'use strict';
 import crypto from 'crypto';
-const x509_1 = require('@fidm/x509');
-
 import {
   Ipay,
   Ih5,
@@ -22,6 +20,8 @@ import { BatchesTransfer, FindRefunds, Output, ProfitSharing, Refunds } from './
 import { Base } from './lib/base';
 import { IPayRequest } from './lib/pay-request.interface';
 import { PayRequest } from './lib/pay-request';
+
+import x509_1 from '@fidm/x509';
 
 export class Pay extends Base {
   protected appid: string; //  直连商户申请的公众号或移动应用appid。
@@ -268,6 +268,7 @@ export class Pay extends Base {
       fileData = Buffer.from(fileData);
     }
 
+    // @ts-ignore
     const certificate = x509_1.Certificate.fromPEM(fileData);
     return certificate.serialNumber;
   }

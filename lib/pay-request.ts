@@ -13,12 +13,11 @@ export class PayRequest implements IPayRequest {
         status: result.status,
         data: result.data,
       };
-    } catch (error) {
-      const err = JSON.parse(JSON.stringify(error));
+    } catch (error: any) {
       return {
-        status: err.response.status,
-        errRaw: err,
-        error: err.response?.data,
+        status: error.response.status,
+        errRaw: error,
+        error: error.response?.data,
       };
     }
   }
@@ -44,12 +43,11 @@ export class PayRequest implements IPayRequest {
       }
 
       return data;
-    } catch (error) {
-      const err = JSON.parse(JSON.stringify(error));
+    } catch (error: any) {
       return {
-        status: err.response.status,
-        errRaw: err,
-        error: err.response?.data,
+        status: error.response.status,
+        errRaw: error,
+        error: error.response?.data,
       };
     }
   }
